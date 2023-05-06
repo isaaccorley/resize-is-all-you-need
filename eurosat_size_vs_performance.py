@@ -1,12 +1,13 @@
-from src.models import get_model_by_name
-from src.datasets.eurosat import EuroSATMinimal
-from src.utils import extract_features
-import torch
-import torch.nn as nn
-from tqdm import tqdm
-from sklearn.neighbors import KNeighborsClassifier
 import kornia.augmentation as K
 import numpy as np
+import torch
+import torch.nn as nn
+from sklearn.neighbors import KNeighborsClassifier
+from tqdm import tqdm
+
+from src.datasets.eurosat import EuroSATMinimal
+from src.models import get_model_by_name
+from src.utils import extract_features
 
 NUM_REPEATS = 10
 

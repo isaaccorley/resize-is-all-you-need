@@ -1,8 +1,7 @@
-from torchgeo.datasets import EuroSAT
-from lightning.pytorch import LightningDataModule
-from torch.utils.data import DataLoader
 import torch
-from torch.utils.data import random_split
+from lightning.pytorch import LightningDataModule
+from torch.utils.data import DataLoader, random_split
+from torchgeo.datasets import EuroSAT
 
 
 class EuroSATMinimal(LightningDataModule):

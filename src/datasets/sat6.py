@@ -51,6 +51,12 @@ class SAT6(Dataset):
 
 
 class SAT6DataModule(LightningDataModule):
+    # stats computed on train set after normalizing by 255.0
+    min = torch.tensor([0.0, 0.0, 0.0, 0.0])
+    min = torch.tensor([1.0, 1.0, 1.0, 1.0])
+    mean = torch.tensor([0.4405, 0.4497, 0.4478, 0.4201])
+    std = torch.tensor([0.2147, 0.1878, 0.1456, 0.3007])
+
     @staticmethod
     def preprocess(sample):
         sample["image"] = sample["image"].float() / 255.0
