@@ -1,14 +1,15 @@
-from src.models import get_model_by_name
-from src.datasets.eurosat import EuroSATMinimal
-from src.utils import extract_features
-import torch
-import torch.nn as nn
-from tqdm import tqdm
-from sklearn.neighbors import KNeighborsClassifier
-import kornia.augmentation as K
-import numpy as np
 import os
 
+import kornia.augmentation as K
+import numpy as np
+import torch
+import torch.nn as nn
+from sklearn.neighbors import KNeighborsClassifier
+from tqdm import tqdm
+
+from src.datasets.eurosat import EuroSATMinimal
+from src.models import get_model_by_name
+from src.utils import extract_features
 
 
 def main():
@@ -25,11 +26,9 @@ def main():
             model = get_model_by_name(model_name, rgb=rgb, device="cuda:0")
 
             results = []
-            sizes = list(range(32,256+1,16))
+            sizes = list(range(32, 256 + 1, 16))
             for size in tqdm(sizes):
-                transforms = nn.Sequential(
-                    K.Resize(size)
-                ).to(device)
+                transforms = nn.Sequential(K.Resize(size)).to(device)
 
                 dm = EuroSATMinimal(
                     root="data/eurosat/",
@@ -39,8 +38,20 @@ def main():
                 )
                 dm.setup()
 
-                x_train, y_train = extract_features(model, dm.train_dataloader(), device, transforms=transforms, verbose=False)
-                x_test, y_test = extract_features(model, dm.test_dataloader(), device, transforms=transforms, verbose=False)
+                x_train, y_train = extract_features(
+                    model,
+                    dm.train_dataloader(),
+                    device,
+                    transforms=transforms,
+                    verbose=False,
+                )
+                x_test, y_test = extract_features(
+                    model,
+                    dm.test_dataloader(),
+                    device,
+                    transforms=transforms,
+                    verbose=False,
+                )
 
                 knn_model = KNeighborsClassifier(n_neighbors=5)
                 knn_model.fit(x_train, y_train)
