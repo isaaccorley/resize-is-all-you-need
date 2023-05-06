@@ -41,10 +41,12 @@ class EuroSATMinimal(LightningDataModule):
             bands=EuroSAT.BAND_SETS[self.band_set],
             transforms=EuroSATMinimal.preprocess
         )
-        ds_all = ds_train + ds_val + ds_test
-        self.train_dataset, self.test_dataset = random_split(
-            ds_all, [0.8, 0.2], generator=self.generator
-        )
+        # ds_all = ds_train + ds_val + ds_test
+        # self.train_dataset, self.test_dataset = random_split(
+        #     ds_all, [0.8, 0.2], generator=self.generator
+        # )
+        self.train_dataset = ds_train
+        self.test_dataset = ds_test
 
     def train_dataloader(self):
         return DataLoader(
