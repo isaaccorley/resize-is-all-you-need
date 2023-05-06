@@ -10,6 +10,7 @@ import numpy as np
 import os
 
 
+
 def main():
     os.makedirs("results/", exist_ok=True)
     device = torch.device("cuda:0")
@@ -50,7 +51,6 @@ def main():
 
             np.save("results/eurosat_size_vs_performance_sizes.npy", sizes)
             np.save(f"results/eurosat_size_vs_performance-{model_name}-{rgb}.npy", results)
-
 
 
 if __name__ == "__main__":
