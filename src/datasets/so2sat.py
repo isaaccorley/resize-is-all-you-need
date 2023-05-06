@@ -2,41 +2,62 @@ from lightning import LightningDataModule
 from torchgeo.datasets import So2Sat
 import torch
 from torch.utils.data import DataLoader
+import torchvision.transforms as T
+
+
+class PadMissingBands:
+    def __call__(self, sample):
+        B01, B09, B10 = torch.zeros(
+            (3, 1, *sample["image"].shape[1:]), dtype=torch.float
+        )
+        sample["image"] = torch.cat(
+            [B01, sample["image"][:8], B09, B10, sample["image"][8:]], dim=0
+        )
+        return sample
 
 
 class So2SatDataModule(LightningDataModule):
-    def preprocess(self, sample):
+    @staticmethod
+    def preprocess(sample):
         sample["image"] = sample["image"].float() / 10000.0
-
-        if self.pad_missing_band:
-            B01, B09 = torch.zeros((2, 1, *sample["image"][1:]), dtype=torch.float)
-            sample["image"] = torch.cat([B01, sample["image"][:8], B09, sample["image"][8:]], dim=0)
         return sample
 
     def __init__(
-        self, root, bands=So2Sat.rgb_bands, batch_size=32, num_workers=8, seed=0, pad_missing_bands=False
+        self,
+        root,
+        bands=So2Sat.rgb_bands,
+        version="3_random",
+        batch_size=32,
+        num_workers=8,
+        seed=0,
+        pad_missing_bands=False,
     ):
         self.root = root
         self.bands = bands
+        self.version = version
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.pad_missing_bands = pad_missing_bands
         self.generator = torch.Generator().manual_seed(seed)
 
     def setup(self):
+        transforms = [self.preprocess]
+        if self.pad_missing_bands:
+            transforms.append(PadMissingBands())
+
         self.train_dataset = So2Sat(
             root=self.root,
             split="train",
-            version="3",
+            version=self.version,
             bands=self.bands,
-            transforms=So2SatDataModule.preprocess,
+            transforms=T.Compose(transforms),
         )
         self.test_dataset = So2Sat(
             root=self.root,
             split="test",
-            version="3",
+            version=self.version,
             bands=self.bands,
-            transforms=So2SatDataModule.preprocess,
+            transforms=T.Compose(transforms),
         )
 
     def train_dataloader(self):
