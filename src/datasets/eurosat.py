@@ -1,17 +1,38 @@
-from torchgeo.datasets import EuroSAT
-from lightning.pytorch import LightningDataModule
-from torch.utils.data import DataLoader
 import torch
-from torch.utils.data import random_split
+from lightning.pytorch import LightningDataModule
+from torch.utils.data import DataLoader, random_split
+from torchgeo.datasets import EuroSAT
 from torchvision.transforms import Normalize
 
-MAX = torch.tensor(
-    [17720.0, 28000.0, 28000.0, 28000.0, 23381.0, 27791.0, 28001.0, 28002.0, 15384.0, 183.0, 24704.0, 22210.0, 28000.0]
-).unsqueeze(1).unsqueeze(1)
+MAX = (
+    torch.tensor(
+        [
+            17720.0,
+            28000.0,
+            28000.0,
+            28000.0,
+            23381.0,
+            27791.0,
+            28001.0,
+            28002.0,
+            15384.0,
+            183.0,
+            24704.0,
+            22210.0,
+            28000.0,
+        ]
+    )
+    .unsqueeze(1)
+    .unsqueeze(1)
+)
 
-MIN = torch.tensor(
-    [816.0, 0.0, 0.0, 0.0, 174.0, 153.0, 128.0, 0.0, 40.0, 1.0, 5.0, 1.0, 91.0]
-).unsqueeze(1).unsqueeze(1)
+MIN = (
+    torch.tensor(
+        [816.0, 0.0, 0.0, 0.0, 174.0, 153.0, 128.0, 0.0, 40.0, 1.0, 5.0, 1.0, 91.0]
+    )
+    .unsqueeze(1)
+    .unsqueeze(1)
+)
 
 MEAN = torch.tensor(
     [
@@ -53,10 +74,9 @@ IMAGENET_NORM = Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 
 
 class EuroSATMinimal(LightningDataModule):
-
     def get_preprocess(self, rgb=True, method="divide"):
         normalize_all = Normalize(mean=MEAN, std=STD)
-        normalize_rgb = Normalize(mean=MEAN[[3,2,1]], std=STD[[3,2,1]])
+        normalize_rgb = Normalize(mean=MEAN[[3, 2, 1]], std=STD[[3, 2, 1]])
 
         def preprocess_normal(sample):
             sample["image"] = sample["image"].float() / 10000.0
@@ -71,14 +91,18 @@ class EuroSATMinimal(LightningDataModule):
 
         def preprocess_min_max(sample):
             if rgb:
-                sample["image"] = (sample["image"].float() - MIN[[3,2,1]]) / (MAX[[3,2,1]] - MIN[[3,2,1]])
+                sample["image"] = (sample["image"].float() - MIN[[3, 2, 1]]) / (
+                    MAX[[3, 2, 1]] - MIN[[3, 2, 1]]
+                )
             else:
                 sample["image"] = (sample["image"].float() - MIN) / (MAX - MIN)
             return sample
 
         def preprocess_min_max_imagenet(sample):
             if rgb:
-                sample["image"] = (sample["image"].float() - MIN[[3,2,1]]) / (MAX[[3,2,1]] - MIN[[3,2,1]])
+                sample["image"] = (sample["image"].float() - MIN[[3, 2, 1]]) / (
+                    MAX[[3, 2, 1]] - MIN[[3, 2, 1]]
+                )
                 sample["image"] = IMAGENET_NORM(sample["image"])
             else:
                 raise ValueError("Method not supported")
@@ -95,7 +119,15 @@ class EuroSATMinimal(LightningDataModule):
         else:
             raise ValueError("Method not supported")
 
-    def __init__(self, root, band_set="rgb", normalization_method="divide", batch_size=32, num_workers=8, use_both_trainval=False):
+    def __init__(
+        self,
+        root,
+        band_set="rgb",
+        normalization_method="divide",
+        batch_size=32,
+        num_workers=8,
+        use_both_trainval=False,
+    ):
         """DataModule for small EuroSAT experiments.
 
         ***NOTE***: this uses random 90/10 splits instead of the torchgeo splits.
@@ -111,7 +143,9 @@ class EuroSATMinimal(LightningDataModule):
         self.use_both_trainval = use_both_trainval
 
     def setup(self):
-        preprocess = self.get_preprocess(rgb=self.band_set == "rgb", method=self.normalization_method)
+        preprocess = self.get_preprocess(
+            rgb=self.band_set == "rgb", method=self.normalization_method
+        )
         ds_train = EuroSAT(
             root=self.root,
             split="train",

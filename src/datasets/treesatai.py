@@ -4,8 +4,18 @@ import os
 import numpy as np
 import rasterio
 import torch
+import torchvision.transforms as T
 from lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset
+
+
+class PadMissingBands:
+    def __call__(self, sample):
+        B10 = torch.zeros((1, 1, *sample["image"].shape[1:]), dtype=torch.float)
+        sample["image"] = torch.cat(
+            [sample["image"][:8], B10, sample["image"][8:]], dim=0
+        )
+        return sample
 
 
 class TreeSatAI(Dataset):
@@ -67,7 +77,6 @@ class TreeSatAI(Dataset):
         multilabel=False,
         transforms=None,
         size=20,
-        pad_missing_band=True,
     ):
         assert split in self.splits
         assert size in self.sizes
@@ -83,7 +92,6 @@ class TreeSatAI(Dataset):
         self.bands = bands
         self.multilabel = multilabel
         self.transforms = transforms
-        self.pad_missing_band = pad_missing_band
         self.num_classes = len(self.classes)
 
         image_root = os.path.join(root, "s2", self.sizes[size])
@@ -111,11 +119,6 @@ class TreeSatAI(Dataset):
             ).astype(np.int32)
 
         image = torch.from_numpy(image)
-
-        if self.pad_missing_band:
-            missing_band = torch.zeros((1, self.size, self.size), dtype=torch.int32)
-            image = torch.cat([image[:10], missing_band, image[10:]], dim=0)
-
         image = image.to(torch.float).clip(min=0.0, max=None)
         return image
 
@@ -174,23 +177,25 @@ class TreeSatAIDataModule(LightningDataModule):
         self.generator = torch.Generator().manual_seed(seed)
 
     def setup(self):
+        transforms = [TreeSatAIDataModule.preprocess]
+        if self.pad_missing_band:
+            transforms.append(PadMissingBands())
+
         self.train_dataset = TreeSatAI(
             root=self.root,
             split="train",
             bands=self.bands,
             multilabel=self.multilabel,
-            transforms=TreeSatAIDataModule.preprocess,
+            transforms=T.Compose(transforms),
             size=self.size,
-            pad_missing_band=self.pad_missing_band,
         )
         self.test_dataset = TreeSatAI(
             root=self.root,
             split="test",
             bands=self.bands,
             multilabel=self.multilabel,
-            transforms=TreeSatAIDataModule.preprocess,
+            transforms=T.Compose(transforms),
             size=self.size,
-            pad_missing_band=self.pad_missing_band,
         )
 
     def train_dataloader(self):

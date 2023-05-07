@@ -1,0 +1,28 @@
+[flake8]
+max-line-length = 150
+extend-ignore =
+    # See https://github.com/PyCQA/pycodestyle/issues/373
+    E203,
+    E402,
+    F821,
+exclude =
+    data/,
+    logo/,
+    logs/,
+    notebooks/,
+    lightning_logs/,
+    output/,
+    train/gen_ml/,
+
+    # Python
+    build/,
+    dist/,
+    .cache/,
+    .mypy_cache/,
+    .pytest_cache/,
+    __pycache__/,
+    *.egg-info/
+
+    # Git
+    .git/,
+    .github/,

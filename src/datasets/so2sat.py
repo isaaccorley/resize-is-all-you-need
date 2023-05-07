@@ -1,8 +1,8 @@
-from lightning import LightningDataModule
-from torchgeo.datasets import So2Sat
 import torch
-from torch.utils.data import DataLoader
 import torchvision.transforms as T
+from lightning import LightningDataModule
+from torch.utils.data import DataLoader
+from torchgeo.datasets import So2Sat
 
 
 class PadMissingBands:
@@ -17,9 +17,11 @@ class PadMissingBands:
 
 
 class So2SatDataModule(LightningDataModule):
+    # stats computed on train set (data is already normalized to [0, 1])
+
     @staticmethod
     def preprocess(sample):
-        sample["image"] = sample["image"].float() / 10000.0
+        sample["image"] = sample["image"].float() / 1.0  # values are already in [0, 1]
         return sample
 
     def __init__(

@@ -23,6 +23,11 @@ class ImageStatisticsModel(nn.Module):
 
 
 def get_model_by_name(model_name, rgb=True, device="cuda"):
+    if model_name == "resnet50_pretrained_seco":
+        if not rgb:
+            raise ValueError("SeCo weights only support RGB")
+        model = get_model("resnet50", weights=ResNet50_Weights.SENTINEL2_ALL_SECO)
+        model = create_feature_extractor(model, return_nodes=["global_pool"])
     if model_name == "resnet50_pretrained_moco":
         if rgb:
             model = get_model("resnet50", weights=ResNet50_Weights.SENTINEL2_RGB_MOCO)
