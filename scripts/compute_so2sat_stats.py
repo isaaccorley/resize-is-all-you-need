@@ -5,13 +5,13 @@ import os
 import h5py
 from tqdm import tqdm
 
+ROOT = os.path.join("data", "so2sat")
+
 if __name__ == "__main__":
     versions = "random", "block", "culture_10"
-    root = os.path.join("data", "so2sat")
-
     stats = {version: {} for version in versions}
     for version in tqdm(versions):
-        path = os.path.join(root, version, "training.h5")
+        path = os.path.join(ROOT, version, "training.h5")
         f = h5py.File(path)
         x = f["sen2"][:]
         stats[version]["min"] = x.min(axis=(0, 1, 2)).tolist()
