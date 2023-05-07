@@ -1,0 +1,97 @@
+Model,Preprocessing,Bands,Size,Overall Accuracy,Feature Postprocessing
+Resnet50 Pretrained Moco,Divide,RGB,64,0.8911111111111111,Standard Scaling
+Resnet50 Pretrained Moco,Divide,RGB,256,0.9477777777777778,Standard Scaling
+Resnet50 Pretrained Imagenet,Divide,RGB,64,0.6107407407407407,Standard Scaling
+Resnet50 Pretrained Imagenet,Divide,RGB,256,0.6283333333333333,Standard Scaling
+Resnet50 Random,Divide,RGB,64,0.5588888888888889,Standard Scaling
+Resnet50 Random,Divide,RGB,256,0.7325925925925926,Standard Scaling
+Resnet18 Pretrained Moco,Divide,RGB,64,0.8875925925925926,Standard Scaling
+Resnet18 Pretrained Moco,Divide,RGB,256,0.9433333333333334,Standard Scaling
+Resnet50 Pretrained Moco,Divide,All,64,0.7275925925925926,Standard Scaling
+Resnet50 Pretrained Moco,Divide,All,256,0.9131481481481482,Standard Scaling
+Resnet50 Pretrained Imagenet,Divide,All,64,0.6196296296296296,Standard Scaling
+Resnet50 Pretrained Imagenet,Divide,All,256,0.5594444444444444,Standard Scaling
+Resnet50 Random,Divide,All,64,0.687037037037037,Standard Scaling
+Resnet50 Random,Divide,All,256,0.8492592592592593,Standard Scaling
+Resnet18 Pretrained Moco,Divide,All,64,0.762962962962963,Standard Scaling
+Resnet18 Pretrained Moco,Divide,All,256,0.9064814814814814,Standard Scaling
+Resnet50 Pretrained Moco,Standardization,RGB,64,0.6233333333333333,Standard Scaling
+Resnet50 Pretrained Moco,Standardization,RGB,256,0.81,Standard Scaling
+Resnet50 Pretrained Imagenet,Standardization,RGB,64,0.7366666666666667,Standard Scaling
+Resnet50 Pretrained Imagenet,Standardization,RGB,256,0.832037037037037,Standard Scaling
+Resnet50 Random,Standardization,RGB,64,0.5888888888888889,Standard Scaling
+Resnet50 Random,Standardization,RGB,256,0.7544444444444445,Standard Scaling
+Resnet18 Pretrained Moco,Standardization,RGB,64,0.6520370370370371,Standard Scaling
+Resnet18 Pretrained Moco,Standardization,RGB,256,0.8274074074074074,Standard Scaling
+Resnet50 Pretrained Moco,Standardization,All,64,0.6781481481481482,Standard Scaling
+Resnet50 Pretrained Moco,Standardization,All,256,0.830925925925926,Standard Scaling
+Resnet50 Pretrained Imagenet,Standardization,All,64,0.695,Standard Scaling
+Resnet50 Pretrained Imagenet,Standardization,All,256,0.8087037037037037,Standard Scaling
+Resnet50 Random,Standardization,All,64,0.76,Standard Scaling
+Resnet50 Random,Standardization,All,256,0.875,Standard Scaling
+Resnet18 Pretrained Moco,Standardization,All,64,0.654074074074074,Standard Scaling
+Resnet18 Pretrained Moco,Standardization,All,256,0.8114814814814815,Standard Scaling
+Resnet50 Pretrained Moco,Minmax,RGB,64,0.8487037037037037,Standard Scaling
+Resnet50 Pretrained Moco,Minmax,RGB,256,0.9346296296296296,Standard Scaling
+Resnet50 Pretrained Imagenet,Minmax,RGB,64,0.5537037037037037,Standard Scaling
+Resnet50 Pretrained Imagenet,Minmax,RGB,256,0.5846296296296296,Standard Scaling
+Resnet50 Random,Minmax,RGB,64,0.5385185185185185,Standard Scaling
+Resnet50 Random,Minmax,RGB,256,0.742037037037037,Standard Scaling
+Resnet18 Pretrained Moco,Minmax,RGB,64,0.8507407407407407,Standard Scaling
+Resnet18 Pretrained Moco,Minmax,RGB,256,0.9344444444444444,Standard Scaling
+Resnet50 Pretrained Moco,Minmax,All,64,0.8,Standard Scaling
+Resnet50 Pretrained Moco,Minmax,All,256,0.9362962962962963,Standard Scaling
+Resnet50 Pretrained Imagenet,Minmax,All,64,0.47129629629629627,Standard Scaling
+Resnet50 Pretrained Imagenet,Minmax,All,256,0.572962962962963,Standard Scaling
+Resnet50 Random,Minmax,All,64,0.7040740740740741,Standard Scaling
+Resnet50 Random,Minmax,All,256,0.8627777777777778,Standard Scaling
+Resnet18 Pretrained Moco,Minmax,All,64,0.8207407407407408,Standard Scaling
+Resnet18 Pretrained Moco,Minmax,All,256,0.9375925925925926,Standard Scaling
+Resnet50 Pretrained Moco,Divide,RGB,64,0.9059259259259259,None
+Resnet50 Pretrained Moco,Divide,RGB,256,0.9542592592592593,None
+Resnet50 Pretrained Imagenet,Divide,RGB,64,0.6355555555555555,None
+Resnet50 Pretrained Imagenet,Divide,RGB,256,0.6931481481481482,None
+Resnet50 Random,Divide,RGB,64,0.5577777777777778,None
+Resnet50 Random,Divide,RGB,256,0.7168518518518519,None
+Resnet18 Pretrained Moco,Divide,RGB,64,0.8966666666666666,None
+Resnet18 Pretrained Moco,Divide,RGB,256,0.9424074074074074,None
+Resnet50 Pretrained Moco,Divide,All,64,0.7774074074074074,None
+Resnet50 Pretrained Moco,Divide,All,256,0.9337037037037037,None
+Resnet50 Pretrained Imagenet,Divide,All,64,0.6477777777777778,None
+Resnet50 Pretrained Imagenet,Divide,All,256,0.6240740740740741,None
+Resnet50 Random,Divide,All,64,0.6796296296296296,None
+Resnet50 Random,Divide,All,256,0.8235185185185185,None
+Resnet18 Pretrained Moco,Divide,All,64,0.7905555555555556,None
+Resnet18 Pretrained Moco,Divide,All,256,0.9161111111111111,None
+Resnet50 Pretrained Moco,Standardization,RGB,64,0.6259259259259259,None
+Resnet50 Pretrained Moco,Standardization,RGB,256,0.8253703703703704,None
+Resnet50 Pretrained Imagenet,Standardization,RGB,64,0.8225925925925925,None
+Resnet50 Pretrained Imagenet,Standardization,RGB,256,0.9166666666666666,None
+Resnet50 Random,Standardization,RGB,64,0.5825925925925926,None
+Resnet50 Random,Standardization,RGB,256,0.7394444444444445,None
+Resnet18 Pretrained Moco,Standardization,RGB,64,0.6674074074074074,None
+Resnet18 Pretrained Moco,Standardization,RGB,256,0.8233333333333334,None
+Resnet50 Pretrained Moco,Standardization,All,64,0.7253703703703703,None
+Resnet50 Pretrained Moco,Standardization,All,256,0.8659259259259259,None
+Resnet50 Pretrained Imagenet,Standardization,All,64,0.7596296296296297,None
+Resnet50 Pretrained Imagenet,Standardization,All,256,0.899074074074074,None
+Resnet50 Random,Standardization,All,64,0.7812962962962963,None
+Resnet50 Random,Standardization,All,256,0.8642592592592593,None
+Resnet18 Pretrained Moco,Standardization,All,64,0.6861111111111111,None
+Resnet18 Pretrained Moco,Standardization,All,256,0.8348148148148148,None
+Resnet50 Pretrained Moco,Minmax,RGB,64,0.8777777777777778,None
+Resnet50 Pretrained Moco,Minmax,RGB,256,0.9407407407407408,None
+Resnet50 Pretrained Imagenet,Minmax,RGB,64,0.5614814814814815,None
+Resnet50 Pretrained Imagenet,Minmax,RGB,256,0.6140740740740741,None
+Resnet50 Random,Minmax,RGB,64,0.5496296296296296,None
+Resnet50 Random,Minmax,RGB,256,0.715925925925926,None
+Resnet18 Pretrained Moco,Minmax,RGB,64,0.8674074074074074,None
+Resnet18 Pretrained Moco,Minmax,RGB,256,0.9362962962962963,None
+Resnet50 Pretrained Moco,Minmax,All,64,0.8327777777777777,None
+Resnet50 Pretrained Moco,Minmax,All,256,0.9437037037037037,None
+Resnet50 Pretrained Imagenet,Minmax,All,64,0.4885185185185185,None
+Resnet50 Pretrained Imagenet,Minmax,All,256,0.5862962962962963,None
+Resnet50 Random,Minmax,All,64,0.7129629629629629,None
+Resnet50 Random,Minmax,All,256,0.8322222222222222,None
+Resnet18 Pretrained Moco,Minmax,All,64,0.8453703703703703,None
+Resnet18 Pretrained Moco,Minmax,All,256,0.9381481481481482,None

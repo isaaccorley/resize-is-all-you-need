@@ -95,7 +95,7 @@ class EuroSATMinimal(LightningDataModule):
         else:
             raise ValueError("Method not supported")
 
-    def __init__(self, root, band_set="rgb", normalization_method="divide", batch_size=32, num_workers=8, seed=0):
+    def __init__(self, root, band_set="rgb", normalization_method="divide", batch_size=32, num_workers=8, use_both_trainval=False):
         """DataModule for small EuroSAT experiments.
 
         ***NOTE***: this uses random 90/10 splits instead of the torchgeo splits.
@@ -108,7 +108,7 @@ class EuroSATMinimal(LightningDataModule):
         self.normalization_method = normalization_method
         self.batch_size = batch_size
         self.num_workers = num_workers
-        self.generator = torch.Generator().manual_seed(seed)
+        self.use_both_trainval = use_both_trainval
 
     def setup(self):
         preprocess = self.get_preprocess(rgb=self.band_set == "rgb", method=self.normalization_method)
@@ -130,10 +130,8 @@ class EuroSATMinimal(LightningDataModule):
             bands=EuroSAT.BAND_SETS[self.band_set],
             transforms=preprocess,
         )
-        # ds_all = ds_train + ds_val + ds_test
-        # self.train_dataset, self.test_dataset = random_split(
-        #     ds_all, [0.8, 0.2], generator=self.generator
-        # )
+        if self.use_both_trainval:
+            ds_train = ds_train + ds_val
         self.train_dataset = ds_train
         self.test_dataset = ds_test
 
