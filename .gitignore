@@ -2,6 +2,8 @@ data
 data/
 *.h5
 *.pkl
+notebooks/*.json
+notebooks/*.csv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
