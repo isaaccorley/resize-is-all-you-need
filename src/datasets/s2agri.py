@@ -1,41 +1,56 @@
+import glob
+import json
 import os
 
 import numpy as np
 import torch
+import torchvision.transforms as T
 from lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset
 
 
-class SAT6(Dataset):
-    classes = [1, 3, 4, 5, 6, 8, 9, 12, 13, 14, 16, 18, 19, 23, 28, 31, 33, 34, 36, 39]
-    all_bands = ["R", "G", "B", "N"]
-    rgb_bands = ["R", "G", "B"]
+class PadMissingBands:
+    def __call__(self, sample):
+        B01, B09, B10 = torch.zeros(
+            (3, 1, *sample["image"].shape[1:]), dtype=torch.float
+        )
+        sample["image"] = torch.cat(
+            [B01, sample["image"][:8], B09, B10, sample["image"][8:]], dim=0
+        )
+        return sample
 
-    def __init__(self, root, split="train", bands=rgb_bands, transforms=None):
-        assert split in ["train", "test"]
+
+class S2Agri(Dataset):
+    classes = [1, 3, 4, 5, 6, 8, 9, 12, 13, 14, 16, 18, 19, 23, 28, 31, 33, 34, 36, 39]
+    all_bands = ["B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B11", "B12"]
+    missing_bands = ["B1", "B9", "B10"]
+    rgb_bands = ["B4", "B3", "B2"]
+
+    def __init__(self, root, bands=rgb_bands, transforms=None):
         for band in bands:
             assert band in self.all_bands
 
         self.band_indices = [self.all_bands.index(band) for band in bands]
 
         self.root = root
-        self.split = split
         self.bands = bands
         self.transforms = transforms
         self.num_classes = len(self.classes)
 
-        self.path = os.path.join(root, self.filename)
-
-        self.X = torch.from_numpy(X).to(torch.uint8).permute(3, 2, 0, 1)
-        self.y = torch.from_numpy(y).to(torch.long).argmax(dim=0)
+        self.image_root = os.path.join(root, "s2-2017-IGARSS-NNI-NPY", "DATA")
+        self.images = glob.glob(os.path.join(self.image_root, "*.npy"))
+        with open(os.path.join(root, "labels.json")) as f:
+            self.labels = json.load(f)["label_19class"]
 
     def __len__(self):
-        return self.X.shape[0]
+        return len(self.images)
 
     def __getitem__(self, index):
-        image = self.X[index]
-        image = image[self.band_indices, ...]
-        label = self.y[index]
+        path = self.images[index]
+        id = os.path.splitext(os.path.basename(path))[0]
+        image = np.load(self.images[index])
+        label = torch.tensor(int(self.labels(id)), dtype=torch.long)
+        image = image[:, self.band_indices, ...]
         sample = {"image": image, "label": label}
 
         if self.transforms is not None:
@@ -44,33 +59,38 @@ class SAT6(Dataset):
         return sample
 
 
-class SAT6DataModule(LightningDataModule):
+class So2SatDataModule(LightningDataModule):
     @staticmethod
     def preprocess(sample):
-        sample["image"] = sample["image"].float() / 255.0
+        sample["image"] = sample["image"].float() / 10000.0
         return sample
 
     def __init__(
-        self, root, bands=SAT6.rgb_bands, batch_size=32, num_workers=8, seed=0
+        self,
+        root,
+        bands=S2Agri.rgb_bands,
+        batch_size=32,
+        num_workers=8,
+        seed=0,
+        pad_missing_bands=False,
     ):
         self.root = root
         self.bands = bands
         self.batch_size = batch_size
         self.num_workers = num_workers
+        self.pad_missing_bands = pad_missing_bands
         self.generator = torch.Generator().manual_seed(seed)
 
     def setup(self):
-        self.train_dataset = SAT6(
+        transforms = [self.preprocess]
+        if self.pad_missing_bands:
+            transforms.append(PadMissingBands())
+
+        dataset = S2Agri(
             root=self.root,
-            split="train",
+            version=self.version,
             bands=self.bands,
-            transforms=SAT6DataModule.preprocess,
-        )
-        self.test_dataset = SAT6(
-            root=self.root,
-            split="test",
-            bands=self.bands,
-            transforms=SAT6DataModule.preprocess,
+            transforms=T.Compose(transforms),
         )
 
     def train_dataloader(self):
