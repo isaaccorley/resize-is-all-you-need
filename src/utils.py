@@ -36,3 +36,12 @@ def extract_features(model, dataloader, device, transforms=None, verbose=True):
     y_all = np.concatenate(y_all, axis=0)
 
     return x_all, y_all
+
+
+def sparse_to_dense(sparse):
+    num_classes = len(sparse)
+    num_samples = sparse[0].shape[0]
+    dense = np.zeros(shape=(num_samples, num_classes), dtype=np.float32)
+    for idx, preds in enumerate(sparse):
+        dense[:, idx] = preds[:, 1]
+    return dense
