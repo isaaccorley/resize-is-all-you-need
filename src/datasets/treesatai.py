@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader, Dataset
 
 class PadMissingBands:
     def __call__(self, sample):
-        B10 = torch.zeros((1, 1, *sample["image"].shape[1:]), dtype=torch.float)
+        B10 = torch.zeros((1, *sample["image"].shape[1:]), dtype=torch.float)
         sample["image"] = torch.cat(
             [sample["image"][:8], B10, sample["image"][8:]], dim=0
         )
@@ -124,13 +124,11 @@ class TreeSatAI(Dataset):
 
     def _load_target(self, index):
         if self.multilabel:
-            path = self.images[index]
-            filename = os.path.basename(path)
-            classes = [label[0] for label in self.labels[filename]]
-            onehot = torch.zeros((self.num_classes,), dtype=torch.long)
-            for cls in classes:
+            filename = os.path.basename(self.images[index])
+            onehot = torch.zeros((self.num_classes,), dtype=torch.float)
+            for cls, score in self.labels[filename]:
                 idx = self.classes.index(cls)
-                onehot[idx] = 1
+                onehot[idx] = score
             return onehot
         else:
             cls = self.labels[index]
@@ -141,7 +139,7 @@ class TreeSatAI(Dataset):
     def __getitem__(self, index):
         path = self.images[index]
         image = self._load_image(path)
-        label = self._load_target(index)
+        label = self._load_target(path)
         sample = {"image": image, "label": label}
 
         if self.transforms is not None:
@@ -153,7 +151,7 @@ class TreeSatAI(Dataset):
 class TreeSatAIDataModule(LightningDataModule):
     @staticmethod
     def preprocess(sample):
-        sample["image"] = sample["image"].float() / 10000.0
+        sample["image"] = sample["image"].float()
         return sample
 
     def __init__(
@@ -162,7 +160,7 @@ class TreeSatAIDataModule(LightningDataModule):
         bands,
         multilabel=False,
         size=20,
-        pad_missing_band=True,
+        pad_missing_bands=True,
         batch_size=32,
         num_workers=8,
         seed=0,
@@ -173,12 +171,12 @@ class TreeSatAIDataModule(LightningDataModule):
         self.batch_size = batch_size
         self.size = size
         self.num_workers = num_workers
-        self.pad_missing_band = pad_missing_band
+        self.pad_missing_bands = pad_missing_bands
         self.generator = torch.Generator().manual_seed(seed)
 
     def setup(self):
         transforms = [TreeSatAIDataModule.preprocess]
-        if self.pad_missing_band:
+        if self.pad_missing_bands:
             transforms.append(PadMissingBands())
 
         self.train_dataset = TreeSatAI(

@@ -23,7 +23,7 @@ from sklearn.metrics import (
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler
 
-from src.datasets import BigEarthNetDataModule
+from src.datasets import TreeSatAI, TreeSatAIDataModule
 from src.models import get_model_by_name
 from src.transforms import seco_rgb_transforms, sentinel2_transforms, ssl4eo_transforms
 from src.utils import extract_features, sparse_to_dense
@@ -40,10 +40,10 @@ def main(args):
         "resnet50_pretrained_imagenet",
         "resnet50_randominit",
         "mosaiks_512_3",
-        "resnet50_pretrained_seco",
+        # "resnet50_pretrained_seco",
     ]
     rgbs = [False, True]
-    sizes = [120, 224]
+    sizes = [34, 224]
 
     for model_name, rgb, size in product(model_names, rgbs, sizes):
         run = f"{model_name}{'_rgb' if rgb else ''}_{size}"
@@ -61,15 +61,17 @@ def main(args):
 
         # Pad missing bands
         if rgb:
-            bands = "rgb"
+            bands = TreeSatAI.rgb_bands
             pad_missing_bands = False
         else:
-            bands = "all"
+            bands = TreeSatAI.correct_band_order
             pad_missing_bands = True
 
-        dm = BigEarthNetDataModule(
-            root="../data/bigearthnet/",
+        dm = TreeSatAIDataModule(
+            root="../data/treesatai/",
             bands=bands,
+            multilabel=True,
+            size=20,
             batch_size=args.batch_size,
             num_workers=args.workers,
             pad_missing_bands=pad_missing_bands,
@@ -101,7 +103,7 @@ def main(args):
             pickle.dump(data, f)
 
     # Eval
-    output = os.path.join(args.directory, "bigearthnet-results.json")
+    output = os.path.join(args.directory, "treesatai-results.json")
     if not os.path.exists(output):
         with open(output, "w") as f:
             json.dump({}, f, indent=2)
@@ -134,17 +136,13 @@ def main(args):
         x_test = data["x_test"]
         y_test = data["y_test"]
 
-        if model_name == "imagestats":
-            scaler = StandardScaler()
-            scaler.fit(x_train)
-            x_train = scaler.transform(x_train)
-            x_test = scaler.transform(x_test)
-
+        scaler = StandardScaler()
+        scaler.fit(x_train)
         knn_model = KNeighborsClassifier(n_neighbors=args.k, n_jobs=args.workers)
-        knn_model.fit(X=x_train, y=y_train)
+        knn_model.fit(X=scaler.transform(x_train), y=y_train)
 
-        y_pred = knn_model.predict(x_test)
-        y_score = knn_model.predict_proba(x_test)
+        y_pred = knn_model.predict(scaler.transform(x_test))
+        y_score = knn_model.predict_proba(scaler.transform(x_test))
         score = sparse_to_dense(y_score)
 
         metrics = {
@@ -171,7 +169,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--directory", type=str, default="bigearthnet")
+    parser.add_argument("--directory", type=str, default="treesatai")
     parser.add_argument("--k", type=int, default=5)
     parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument("--workers", type=int, default=mp.cpu_count())
