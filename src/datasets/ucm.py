@@ -12,10 +12,21 @@ STD = torch.tensor(
     [55.80735538, 51.78990456, 50.0009605]
 )
 
+IMAGENET_NORMALIZATION = Normalize(
+    mean=[0.485, 0.456, 0.406],
+    std=[0.229, 0.224, 0.225],
+)
+
 
 class UCMMinimal(LightningDataModule):
+
     def get_preprocess(self, method="divide"):
         normalize_all = Normalize(mean=MEAN, std=STD)
+
+        def preprocess_imagenet(sample):
+            sample["image"] = (sample["image"] / 255.0).float()
+            sample["image"] = IMAGENET_NORMALIZATION(sample["image"])
+            return sample
 
         def preprocess_normal(sample):
             sample["image"] = sample["image"].float() / 255.0
@@ -29,6 +40,8 @@ class UCMMinimal(LightningDataModule):
             return preprocess_standardization
         elif method == "minmax" or method == "divide":
             return preprocess_normal
+        elif method == "imagenet":
+            return preprocess_imagenet
         elif method == "none":
             return lambda x: x
         else:

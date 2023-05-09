@@ -98,12 +98,10 @@ class EuroSATMinimal(LightningDataModule):
                 sample["image"] = (sample["image"].float() - MIN) / (MAX - MIN)
             return sample
 
-        def preprocess_min_max_imagenet(sample):
+        def preprocess_seco(sample):
             if rgb:
-                sample["image"] = (sample["image"].float() - MIN[[3, 2, 1]]) / (
-                    MAX[[3, 2, 1]] - MIN[[3, 2, 1]]
-                )
-                sample["image"] = IMAGENET_NORM(sample["image"])
+                sample["image"] = (sample["image"].float() / 2750.0)
+                sample["image"] = torch.clamp(sample["image"], 0, 1)
             else:
                 raise ValueError("Method not supported")
             return sample
@@ -114,8 +112,10 @@ class EuroSATMinimal(LightningDataModule):
             return preprocess_standardization
         elif method == "minmax":
             return preprocess_min_max
-        elif method == "minmax_imagenet":
-            return preprocess_min_max_imagenet
+        elif method == "for_seco":
+            return preprocess_seco
+        elif method == "none":
+            return lambda x: x
         else:
             raise ValueError("Method not supported")
 
