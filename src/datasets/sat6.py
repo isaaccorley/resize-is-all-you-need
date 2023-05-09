@@ -59,7 +59,7 @@ class SAT6DataModule(LightningDataModule):
 
     @staticmethod
     def preprocess(sample):
-        sample["image"] = sample["image"].float() / 255.0
+        sample["image"] = sample["image"].float()
         return sample
 
     def __init__(

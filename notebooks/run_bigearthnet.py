@@ -1,3 +1,5 @@
+import argparse
+import multiprocessing as mp
 import os
 import sys
 
@@ -9,36 +11,35 @@ from itertools import product
 from pprint import pprint
 
 import kornia.augmentation as K
-import numpy as np
 import torch
 import torch.nn as nn
-from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
+from sklearn.metrics import (
+    accuracy_score,
+    average_precision_score,
+    f1_score,
+    precision_score,
+    recall_score,
+)
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.preprocessing import label_binarize
 
 from src.datasets import BigEarthNetDataModule
 from src.models import get_model_by_name
-from src.transforms import (
-    imagenet_transforms,
-    seco_rgb_transforms,
-    sentinel2_transforms,
-    ssl4eo_transforms,
-)
+from src.transforms import seco_rgb_transforms, sentinel2_transforms, ssl4eo_transforms
 from src.utils import extract_features
 
-if __name__ == "__main__":
-    device = torch.device("cuda")
-    directory = "bigearthnet"
-    os.makedirs(directory, exist_ok=True)
+
+def main(args):
+    device = torch.device(args.device)
+    os.makedirs(args.directory, exist_ok=True)
 
     # Fit
     model_names = [
         "resnet50_pretrained_moco",
         "imagestats",
-        "resnet50_pretrained_seco",
         "resnet50_pretrained_imagenet",
         "resnet50_randominit",
         "mosaiks_512_3",
+        "resnet50_pretrained_seco",
     ]
     rgbs = [False, True]
     sizes = [120, 224]
@@ -47,8 +48,8 @@ if __name__ == "__main__":
         run = f"{model_name}{'_rgb' if rgb else ''}_{size}"
         print(f"Extracting features for {run}")
 
-        # Skip if features were already exracted
-        if os.path.exists(os.path.join(directory, f"{run}.pkl")):
+        # Skip if features were already extracted
+        if os.path.exists(os.path.join(args.directory, f"{run}.pkl")):
             continue
 
         # SeCo only supports RGB
@@ -68,8 +69,8 @@ if __name__ == "__main__":
         dm = BigEarthNetDataModule(
             root="../data/bigearthnet/",
             bands=bands,
-            batch_size=32,
-            num_workers=16,
+            batch_size=args.batch_size,
+            num_workers=args.workers,
             pad_missing_bands=pad_missing_bands,
             seed=0,
         )
@@ -95,16 +96,15 @@ if __name__ == "__main__":
             model, dm.test_dataloader(), device, transforms=transforms
         )
         data = dict(x_train=x_train, y_train=y_train, x_test=x_test, y_test=y_test)
-        with open(os.path.join(directory, f"{run}.pkl"), "wb") as f:
+        with open(os.path.join(args.directory, f"{run}.pkl"), "wb") as f:
             pickle.dump(data, f)
 
     # Eval
-    output = os.path.join(directory, "bigearthnet-results.json")
+    output = os.path.join(args.directory, "bigearthnet-results.json")
     if not os.path.exists(output):
         with open(output, "w") as f:
             json.dump({}, f, indent=2)
 
-    K = 5
     for model_name, rgb, size in product(model_names, rgbs, sizes):
         with open(output) as f:
             results = json.load(f)
@@ -121,7 +121,7 @@ if __name__ == "__main__":
         if run in results:
             continue
 
-        filename = os.path.join(directory, f"{run}.pkl")
+        filename = os.path.join(args.directory, f"{run}.pkl")
         if not os.path.exists(filename):
             continue
 
@@ -133,14 +133,18 @@ if __name__ == "__main__":
         x_test = data["x_test"]
         y_test = data["y_test"]
 
-        knn_model = KNeighborsClassifier(n_neighbors=K, n_jobs=8)
+        knn_model = KNeighborsClassifier(n_neighbors=args.k, n_jobs=args.workers)
         knn_model.fit(X=x_train, y=y_train)
 
-        y_test_onehot = label_binarize(y_test, classes=np.arange(19))
         y_pred = knn_model.predict(x_test)
         y_score = knn_model.predict_proba(x_test)
 
         metrics = {
+            "map_weighted": average_precision_score(
+                y_test, y_score, average="weighted"
+            ),
+            "map_macro": average_precision_score(y_test, y_score, average="macro"),
+            "map_micro": average_precision_score(y_test, y_score, average="micro"),
             "f1_weighted": f1_score(y_test, y_pred, average="weighted"),
             "f1_macro": f1_score(y_test, y_pred, average="macro"),
             "f1_micro": f1_score(y_test, y_pred, average="micro"),
@@ -157,3 +161,14 @@ if __name__ == "__main__":
 
         with open(output, "w") as f:
             json.dump(results, f, indent=2)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--directory", type=str, default="bigearthnet")
+    parser.add_argument("--k", type=int, default=5)
+    parser.add_argument("--batch-size", type=int, default=32)
+    parser.add_argument("--workers", type=int, default=mp.cpu_count())
+    parser.add_argument("--device", type=str, default="cuda")
+    args = parser.parse_args()
+    main(args)

@@ -38,6 +38,10 @@ def sentinel2_transforms():
     return [K.Normalize(mean=torch.tensor(0.0), std=torch.tensor(10000.0))]
 
 
+def uint8_transforms():
+    return [K.Normalize(mean=torch.tensor(0.0), std=torch.tensor(255.0))]
+
+
 def imagenet_transforms():
     return [
         K.Normalize(mean=torch.tensor(IMAGENET_MEAN), std=torch.tensor(IMAGENET_STD))
