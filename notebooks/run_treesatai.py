@@ -136,13 +136,17 @@ def main(args):
         x_test = data["x_test"]
         y_test = data["y_test"]
 
-        scaler = StandardScaler()
-        scaler.fit(x_train)
-        knn_model = KNeighborsClassifier(n_neighbors=args.k, n_jobs=args.workers)
-        knn_model.fit(X=scaler.transform(x_train), y=y_train)
+        if model_name == "imagestats":
+            scaler = StandardScaler()
+            scaler.fit(x_train)
+            x_train = scaler.transform(x_train)
+            x_test = scaler.transform(x_test)
 
-        y_pred = knn_model.predict(scaler.transform(x_test))
-        y_score = knn_model.predict_proba(scaler.transform(x_test))
+        knn_model = KNeighborsClassifier(n_neighbors=args.k, n_jobs=args.workers)
+        knn_model.fit(X=x_train, y=y_train)
+
+        y_pred = knn_model.predict(x_test)
+        y_score = knn_model.predict_proba(x_test)
         score = sparse_to_dense(y_score)
 
         metrics = {

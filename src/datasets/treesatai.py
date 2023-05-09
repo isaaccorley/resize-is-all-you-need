@@ -139,7 +139,7 @@ class TreeSatAI(Dataset):
     def __getitem__(self, index):
         path = self.images[index]
         image = self._load_image(path)
-        label = self._load_target(path)
+        label = self._load_target(index)
         sample = {"image": image, "label": label}
 
         if self.transforms is not None:
