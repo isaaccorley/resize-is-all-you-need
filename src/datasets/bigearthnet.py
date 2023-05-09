@@ -7,7 +7,7 @@ from torchgeo.datasets import BigEarthNet
 
 class PadMissingBands:
     def __call__(self, sample):
-        B10 = torch.zeros((1, 1, *sample["image"].shape[1:]), dtype=torch.float)
+        B10 = torch.zeros((1, *sample["image"].shape[1:]), dtype=torch.float)
         sample["image"] = torch.cat(
             [sample["image"][:8], B10, sample["image"][8:]], dim=0
         )
@@ -65,7 +65,7 @@ class BigEarthNetDataModule(LightningDataModule):
 
     @staticmethod
     def preprocess(sample):
-        sample["image"] = sample["image"].float() / 100000.0
+        sample["image"] = sample["image"].float()
         return sample
 
     def __init__(
@@ -101,7 +101,6 @@ class BigEarthNetDataModule(LightningDataModule):
         self.test_dataset = BigEarthNet(
             root=self.root,
             split="test",
-            version=self.version,
             bands="s2",
             num_classes=19,
             transforms=T.Compose(transforms),
