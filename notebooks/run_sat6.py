@@ -8,29 +8,22 @@ from itertools import product
 from pprint import pprint
 
 import kornia.augmentation as K
-import lightning
+import lightning as pl
 import pandas as pd
 import torch
 import torch.nn as nn
-from sklearn.metrics import (
-    accuracy_score,
-    average_precision_score,
-    f1_score,
-    precision_score,
-    recall_score,
-)
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.preprocessing import StandardScaler
 
 sys.path.append("..")
-from src.datasets import BigEarthNetDataModule
+from src.datasets import SAT6DataModule
 from src.models import get_model_by_name
-from src.transforms import seco_rgb_transforms, sentinel2_transforms, ssl4eo_transforms
-from src.utils import extract_features, sparse_to_dense
+from src.transforms import seco_rgb_transforms, uint8_transforms
+from src.utils import extract_features
 
 
 def main(args):
-    lightning.seed_everything(args.seed)
+    pl.seed_everything(args.seed)
     device = torch.device(args.device)
     os.makedirs(args.directory, exist_ok=True)
 
@@ -42,8 +35,8 @@ def main(args):
         "resnet50_randominit",
         "mosaiks_512_3",
     ]
-    rgbs = [False, True]
-    sizes = [120, 224]
+    rgbs = [True]
+    sizes = [34, 224]
 
     for model_name, rgb, size in product(model_names, rgbs, sizes):
         run = f"{model_name}{'_rgb' if rgb else ''}_{size}"
@@ -59,20 +52,10 @@ def main(args):
         if model_name == "imagestats" and size == 224:
             continue
 
-        # Pad missing bands
-        if rgb:
-            bands = "rgb"
-            pad_missing_bands = False
-        else:
-            bands = "all"
-            pad_missing_bands = True
-
-        dm = BigEarthNetDataModule(
-            root="../data/bigearthnet/",
-            bands=bands,
+        dm = SAT6DataModule(
+            root="../data/sat6/",
             batch_size=args.batch_size,
             num_workers=args.workers,
-            pad_missing_bands=pad_missing_bands,
             seed=args.seed,
         )
         dm.setup()
@@ -84,9 +67,9 @@ def main(args):
         elif "seco" in model_name:
             transforms = [K.Resize(size), *seco_rgb_transforms()]
         elif "moco" in model_name:
-            transforms = [K.Resize(size), *ssl4eo_transforms()]
+            transforms = [K.Resize(size), *uint8_transforms()]
         else:
-            transforms = [K.Resize(size), *sentinel2_transforms()]
+            transforms = [K.Resize(size), *uint8_transforms()]
 
         transforms = nn.Sequential(*transforms).to(device)
 
@@ -101,7 +84,7 @@ def main(args):
             pickle.dump(data, f)
 
     # Eval
-    output = os.path.join(args.directory, "bigearthnet-results.json")
+    output = os.path.join(args.directory, "sat6-results.json")
     if not os.path.exists(output):
         with open(output, "w") as f:
             json.dump({}, f, indent=2)
@@ -144,13 +127,8 @@ def main(args):
         knn_model.fit(X=x_train, y=y_train)
 
         y_pred = knn_model.predict(x_test)
-        y_score = knn_model.predict_proba(x_test)
-        score = sparse_to_dense(y_score)
 
         metrics = {
-            "map_weighted": average_precision_score(y_test, score, average="weighted"),
-            "map_macro": average_precision_score(y_test, score, average="macro"),
-            "map_micro": average_precision_score(y_test, score, average="micro"),
             "f1_weighted": f1_score(y_test, y_pred, average="weighted"),
             "f1_macro": f1_score(y_test, y_pred, average="macro"),
             "f1_micro": f1_score(y_test, y_pred, average="micro"),
@@ -169,7 +147,7 @@ def main(args):
             json.dump(results, f, indent=2)
 
     # Convert to csv
-    with open(output, "r") as f:
+    with open(output) as f:
         results = json.load(f)
 
     df = pd.DataFrame.from_dict(results).transpose()
@@ -184,7 +162,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--directory", type=str, default="bigearthnet")
+    parser.add_argument("--directory", type=str, default="sat6")
     parser.add_argument("--k", type=int, default=5)
     parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument("--workers", type=int, default=mp.cpu_count())

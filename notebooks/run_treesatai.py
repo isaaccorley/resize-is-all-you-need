@@ -1,16 +1,15 @@
 import argparse
+import json
 import multiprocessing as mp
 import os
-import sys
-
-sys.path.append("..")
-
-import json
 import pickle
+import sys
 from itertools import product
 from pprint import pprint
 
 import kornia.augmentation as K
+import lightning
+import pandas as pd
 import torch
 import torch.nn as nn
 from sklearn.metrics import (
@@ -23,6 +22,7 @@ from sklearn.metrics import (
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler
 
+sys.path.append("..")
 from src.datasets import TreeSatAI, TreeSatAIDataModule
 from src.models import get_model_by_name
 from src.transforms import seco_rgb_transforms, sentinel2_transforms, ssl4eo_transforms
@@ -30,6 +30,7 @@ from src.utils import extract_features, sparse_to_dense
 
 
 def main(args):
+    lightning.seed_everything(args.seed)
     device = torch.device(args.device)
     os.makedirs(args.directory, exist_ok=True)
 
@@ -40,7 +41,6 @@ def main(args):
         "resnet50_pretrained_imagenet",
         "resnet50_randominit",
         "mosaiks_512_3",
-        # "resnet50_pretrained_seco",
     ]
     rgbs = [False, True]
     sizes = [34, 224]
@@ -75,7 +75,7 @@ def main(args):
             batch_size=args.batch_size,
             num_workers=args.workers,
             pad_missing_bands=pad_missing_bands,
-            seed=0,
+            seed=args.seed,
         )
         dm.setup()
 
@@ -132,9 +132,9 @@ def main(args):
             data = pickle.load(f)
 
         x_train = data["x_train"]
-        y_train = data["y_train"]
+        y_train = data["y_train"] > 0.0
         x_test = data["x_test"]
-        y_test = data["y_test"]
+        y_test = data["y_test"] > 0.0
 
         if model_name == "imagestats":
             scaler = StandardScaler()
@@ -170,6 +170,19 @@ def main(args):
         with open(output, "w") as f:
             json.dump(results, f, indent=2)
 
+    # Convert to csv
+    with open(output, "r") as f:
+        results = json.load(f)
+
+    df = pd.DataFrame.from_dict(results).transpose()
+    df["rgb"] = ["RGB" if "rgb" in model_name else "MSI" for model_name in df.index]
+    df["size"] = [int(model_name.split("_")[-1]) for model_name in df.index]
+    df["encoder"] = [
+        model_name.rsplit("_", 1)[0].replace("_rgb", "") for model_name in df.index
+    ]
+    df = df.sort_values(["rgb", "encoder", "size"], ascending=True)
+    df.to_csv(output.replace(".json", ".csv"))
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -178,5 +191,6 @@ if __name__ == "__main__":
     parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument("--workers", type=int, default=mp.cpu_count())
     parser.add_argument("--device", type=str, default="cuda")
+    parser.add_argument("--seed", type=int, default=0)
     args = parser.parse_args()
     main(args)
