@@ -8,6 +8,7 @@ notebooks/bigearthnet/
 notebooks/so2sat/
 notebooks/sat6/
 notebooks/treesatai/
+notebooks/so2sat_3_random/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
