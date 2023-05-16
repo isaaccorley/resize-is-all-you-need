@@ -2,13 +2,13 @@ import argparse
 import json
 import multiprocessing as mp
 import os
-import pickle
 import sys
 from itertools import product
 from pprint import pprint
 
 import kornia.augmentation as K
 import lightning as pl
+import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
@@ -30,12 +30,12 @@ def main(args):
 
     # Fit
     model_names = [
-        # "resnet50_pretrained_moco",
-        # "resnet50_pretrained_imagenet",
-        # "resnet50_randominit",
-        # "imagestats",
-        # "mosaiks_512_3",
-        "mosaiks_zca_512_3"
+        "resnet50_pretrained_moco",
+        "resnet50_pretrained_imagenet",
+        "resnet50_randominit",
+        "imagestats",
+        "mosaiks_512_3",
+        "mosaiks_zca_512_3",
     ]
     rgbs = [False, True]
     sizes = [34, 224]
@@ -96,9 +96,11 @@ def main(args):
         x_test, y_test = extract_features(
             model, dm.test_dataloader(), device, transforms=transforms
         )
-        data = dict(x_train=x_train, y_train=y_train, x_test=x_test, y_test=y_test)
-        with open(os.path.join(args.directory, f"{run}.pkl"), "wb") as f:
-            pickle.dump(data, f)
+
+        filename = os.path.join(args.directory, f"{run}.npz")
+        np.savez(
+            filename, x_train=x_train, y_train=y_train, x_test=x_test, y_test=y_test
+        )
 
     # Eval
     output = os.path.join(args.directory, f"so2sat-{args.version}-results.json")
@@ -122,13 +124,11 @@ def main(args):
         if run in results:
             continue
 
-        filename = os.path.join(args.directory, f"{run}.pkl")
+        filename = os.path.join(args.directory, f"{run}.npz")
         if not os.path.exists(filename):
             continue
 
-        with open(filename, "rb") as f:
-            data = pickle.load(f)
-
+        data = np.load(filename)
         x_train = data["x_train"]
         y_train = data["y_train"]
         x_test = data["x_test"]
