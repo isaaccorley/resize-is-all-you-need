@@ -20,7 +20,6 @@ from torchgeo.datasets import So2Sat
 sys.path.append("..")
 from src.datasets import So2SatDataModule
 from src.models import get_model_by_name
-from src.transforms import seco_rgb_transforms, sentinel2_transforms, ssl4eo_transforms
 from src.utils import extract_features
 
 
@@ -83,11 +82,11 @@ def main(args):
         if model_name == "imagestats":
             transforms = [nn.Identity()]
         elif "seco" in model_name:
-            transforms = [K.Resize(size), *seco_rgb_transforms()]
+            transforms = [K.Resize(size)]
         elif "moco" in model_name:
-            transforms = [K.Resize(size), *ssl4eo_transforms()]
+            transforms = [K.Resize(size)]
         else:
-            transforms = [K.Resize(size), *sentinel2_transforms()]
+            transforms = [K.Resize(size)]
 
         transforms = nn.Sequential(*transforms).to(device)
 
@@ -190,7 +189,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--version",
         type=str,
-        default="3_random",
+        default="3_culture_10",
         choices=["3_random", "3_block", "3_culture_10"],
     )
     args = parser.parse_args()
