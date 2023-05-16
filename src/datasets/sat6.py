@@ -1,5 +1,6 @@
 import os
 
+import kornia.augmentation as K
 import torch
 from lightning import LightningDataModule
 from scipy.io import loadmat
@@ -56,6 +57,8 @@ class SAT6DataModule(LightningDataModule):
     min = torch.tensor([1.0, 1.0, 1.0, 1.0])
     mean = torch.tensor([0.4405, 0.4497, 0.4478, 0.4201])
     std = torch.tensor([0.2147, 0.1878, 0.1456, 0.3007])
+
+    norm_rgb = K.Normalize(mean=mean[[0, 1, 2]], std=std[[0, 1, 2]])
 
     @staticmethod
     def preprocess(sample):

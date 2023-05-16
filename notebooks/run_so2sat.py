@@ -45,12 +45,9 @@ def main(args):
         print(f"Extracting features for {run}")
 
         # Skip if features were already extracted
-        if os.path.exists(os.path.join(args.directory, f"{run}.pkl")):
+        if os.path.exists(os.path.join(args.directory, f"{run}.npz")):
             continue
 
-        # SeCo only supports RGB
-        if model_name == "resnet50_pretrained_seco" and not rgb:
-            continue
         if model_name == "imagestats" and size == 224:
             continue
 
@@ -81,10 +78,13 @@ def main(args):
 
         if model_name == "imagestats":
             transforms = [nn.Identity()]
-        elif "seco" in model_name:
-            transforms = [K.Resize(size)]
         elif "moco" in model_name:
             transforms = [K.Resize(size)]
+        elif "imagenet" in model_name:
+            if rgb:
+                transforms = [K.Resize(size), dm.norm_rgb]
+            else:
+                transforms = [K.Resize(size), dm.norm_msi]
         else:
             transforms = [K.Resize(size)]
 
@@ -112,9 +112,6 @@ def main(args):
         with open(output) as f:
             results = json.load(f)
 
-        # SeCo only supports RGB
-        if model_name == "resnet50_pretrained_seco" and not rgb:
-            continue
         if model_name == "imagestats" and size == 224:
             continue
 
@@ -189,8 +186,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "--version",
         type=str,
-        default="3_culture_10",
+        default="3_random",
         choices=["3_random", "3_block", "3_culture_10"],
     )
     args = parser.parse_args()
+    args.directory = f"{args.directory}_{args.seed}"
     main(args)

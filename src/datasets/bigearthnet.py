@@ -1,3 +1,4 @@
+import kornia.augmentation as K
 import torch
 import torchvision.transforms as T
 from lightning import LightningDataModule
@@ -23,6 +24,20 @@ class SelectRGB:
 
 class BigEarthNetDataModule(LightningDataModule):
     # stats from https://github.com/ServiceNow/seasonal-contrast/blob/main/datasets/bigearthnet_dataset.py
+    bands = [
+        "B01",
+        "B02",
+        "B03",
+        "B04",
+        "B05",
+        "B06",
+        "B07",
+        "B08",
+        "B8A",
+        "B09",
+        "B11",
+        "B12",
+    ]
     mean = (
         torch.tensor(
             [
@@ -36,6 +51,7 @@ class BigEarthNetDataModule(LightningDataModule):
                 2218.94553375,
                 2266.46036911,
                 2246.0605464,
+                0.0,  # padded band
                 1594.42694882,
                 1009.32729131,
             ]
@@ -56,12 +72,16 @@ class BigEarthNetDataModule(LightningDataModule):
                 1365.45589904,
                 1356.13789355,
                 1302.3292881,
+                10000.0,  # padded band
                 1079.19066363,
                 818.86747235,
             ]
         )
         / 10000.0
     )
+
+    norm_rgb = K.Normalize(mean=mean[[3, 2, 1]], std=std[[3, 2, 1]])
+    norm_msi = K.Normalize(mean=mean, std=std)
 
     @staticmethod
     def preprocess(sample):

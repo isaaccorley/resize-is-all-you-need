@@ -19,7 +19,7 @@ from sklearn.preprocessing import StandardScaler
 sys.path.append("..")
 from src.datasets import SAT6DataModule
 from src.models import get_model_by_name
-from src.transforms import seco_rgb_transforms, uint8_transforms
+from src.transforms import uint8_transforms
 from src.utils import extract_features
 
 
@@ -45,12 +45,9 @@ def main(args):
         print(f"Extracting features for {run}")
 
         # Skip if features were already extracted
-        if os.path.exists(os.path.join(args.directory, f"{run}.pkl")):
+        if os.path.exists(os.path.join(args.directory, f"{run}.npz")):
             continue
 
-        # SeCo only supports RGB
-        if model_name == "resnet50_pretrained_seco" and not rgb:
-            continue
         if model_name == "imagestats" and size == 224:
             continue
 
@@ -71,10 +68,10 @@ def main(args):
 
         if model_name == "imagestats":
             transforms = [nn.Identity()]
-        elif "seco" in model_name:
-            transforms = [K.Resize(size), *seco_rgb_transforms()]
         elif "moco" in model_name:
             transforms = [K.Resize(size), *uint8_transforms()]
+        elif "imagenet" in model_name:
+            transforms = [K.Resize(size), *uint8_transforms(), dm.norm_rgb]
         else:
             transforms = [K.Resize(size), *uint8_transforms()]
 
@@ -102,9 +99,6 @@ def main(args):
         with open(output) as f:
             results = json.load(f)
 
-        # SeCo only supports RGB
-        if model_name == "resnet50_pretrained_seco" and not rgb:
-            continue
         if model_name == "imagestats" and size == 224:
             continue
 
@@ -177,4 +171,5 @@ if __name__ == "__main__":
     parser.add_argument("--device", type=str, default="cuda")
     parser.add_argument("--seed", type=int, default=0)
     args = parser.parse_args()
+    args.directory = f"{args.directory}_{args.seed}"
     main(args)
