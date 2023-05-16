@@ -1,2 +1,3 @@
 torchgeo
 scipy
+scikit-learn
