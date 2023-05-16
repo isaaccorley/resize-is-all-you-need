@@ -14,6 +14,7 @@ import torch
 import torch.nn as nn
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.preprocessing import StandardScaler
 
 sys.path.append("..")
 from src.datasets import SAT6DataModule
@@ -34,6 +35,7 @@ def main(args):
         "resnet50_pretrained_imagenet",
         "resnet50_randominit",
         "mosaiks_512_3",
+        "mosaiks_zca_512_3",
     ]
     rgbs = [True]
     sizes = [34, 224]
@@ -53,14 +55,19 @@ def main(args):
             continue
 
         dm = SAT6DataModule(
-            root="../data/sat6/",
+            root=args.root,
             batch_size=args.batch_size,
             num_workers=args.workers,
             seed=args.seed,
         )
         dm.setup()
 
-        model = get_model_by_name(model_name, rgb, device=device)
+        if "mosaiks_zca" in model_name:
+            model = get_model_by_name(
+                model_name, rgb, device=device, dataset=dm.train_dataset
+            )
+        else:
+            model = get_model_by_name(model_name, rgb, device=device, dataset=None)
 
         if model_name == "imagestats":
             transforms = [nn.Identity()]
@@ -117,7 +124,7 @@ def main(args):
         x_test = data["x_test"]
         y_test = data["y_test"]
 
-        if model_name == "imagestats":
+        if model_name == "imagestats" or model_name.startswith("mosaiks"):
             scaler = StandardScaler()
             scaler.fit(x_train)
             x_train = scaler.transform(x_train)
@@ -162,6 +169,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("--root", type=str, default="../data/sat6/")
     parser.add_argument("--directory", type=str, default="sat6")
     parser.add_argument("--k", type=int, default=5)
     parser.add_argument("--batch-size", type=int, default=32)
