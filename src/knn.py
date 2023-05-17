@@ -4,7 +4,7 @@ import numpy as np
 
 
 class FaissKNNClassifier:
-    def __init__(self, n_neighbors, n_classes, device="cpu"):
+    def __init__(self, n_neighbors, n_classes=None, device="cpu"):
         self.n_neighbors = n_neighbors
         self.n_classes = n_classes
 
@@ -18,6 +18,33 @@ class FaissKNNClassifier:
             else:
                 self.device = 0
 
+    def create_index(self, d):
+        if self.cuda:
+            self.res = faiss.StandardGpuResources()
+            self.config = faiss.GpuIndexFlatConfig()
+            self.config.device = self.device
+            self.index = faiss.GpuIndexFlatL2(self.res, d, self.config)
+        else:
+            self.index = faiss.IndexFlatL2(d)
+
+    def fit(self, X, y):
+        X = np.atleast_2d(X).astype(np.float32)
+        X = np.ascontiguousarray(X)
+        self.create_index(X.shape[-1])
+        self.index.add(X)
+        self.y = y.astype(int)
+        if self.n_classes is None:
+            self.n_classes = len(np.unique(y))
+        return self
+
+    def __del__(self):
+        if hasattr(self, "index"):
+            self.index.reset()
+            del self.index
+        if hasattr(self, "res"):
+            self.res.noTempMemory()
+            del self.res
+
     def predict(self, X):
         X = np.atleast_2d(X).astype(np.float32)
         _, idx = self.index.search(X, self.n_neighbors)
@@ -29,15 +56,6 @@ class FaissKNNClassifier:
         )
         preds = np.argmax(counts, axis=1)
         return preds
-
-    def create_index(self, d):
-        if self.cuda:
-            self.res = faiss.StandardGpuResources()
-            self.config = faiss.GpuIndexFlatConfig()
-            self.config.device = self.device
-            self.index = faiss.GpuIndexFlatL2(self.res, d, self.config)
-        else:
-            self.index = faiss.IndexFlatL2(d)
 
     def predict_proba(self, X):
         X = np.atleast_2d(X).astype(np.float32)
@@ -51,22 +69,6 @@ class FaissKNNClassifier:
 
         preds_proba = counts / self.n_neighbors
         return preds_proba
-
-    def fit(self, X, y):
-        X = np.atleast_2d(X).astype(np.float32)
-        X = np.ascontiguousarray(X)
-        self.create_index(X.shape[-1])
-        self.index.add(X)
-        self.y = y.astype(int)
-        return self
-
-    def __del__(self):
-        if hasattr(self, "index"):
-            self.index.reset()
-            del self.index
-        if hasattr(self, "res"):
-            self.res.noTempMemory()
-            del self.res
 
 
 class FaissKNNMultilabelClassifier(FaissKNNClassifier):

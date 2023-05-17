@@ -138,7 +138,11 @@ def main(args):
         x_test = data["x_test"]
         y_test = data["y_test"]
 
-        if model_name == "imagestats" or model_name.startswith("mosaiks"):
+        if (
+            model_name == "imagestats"
+            or "random" in model_name
+            or model_name.startswith("mosaiks")
+        ):
             scaler = StandardScaler()
             scaler.fit(x_train)
             x_train = scaler.transform(x_train)
