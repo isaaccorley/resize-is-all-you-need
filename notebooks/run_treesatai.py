@@ -36,14 +36,17 @@ def main(args):
     os.makedirs(args.directory, exist_ok=True)
 
     # Fit
-    model_names = [
-        "resnet50_pretrained_moco",
-        "imagestats",
-        "resnet50_pretrained_imagenet",
-        "resnet50_randominit",
-        "mosaiks_512_3",
-        "mosaiks_zca_512_3",
-    ]
+    if args.seed == 0:
+        model_names = [
+            "resnet50_pretrained_moco",
+            "imagestats",
+            "resnet50_pretrained_imagenet",
+            "resnet50_randominit",
+            "mosaiks_512_3",
+            "mosaiks_zca_512_3",
+        ]
+    else:
+        model_names = ["resnet50_randominit", "mosaiks_512_3", "mosaiks_zca_512_3"]
     rgbs = [False, True]
     sizes = [34, 224]
 
@@ -80,10 +83,12 @@ def main(args):
 
         if "mosaiks_zca" in model_name:
             model = get_model_by_name(
-                model_name, rgb, device=device, dataset=dm.train_dataset
+                model_name, rgb, device=device, dataset=dm.train_dataset, seed=args.seed
             )
         else:
-            model = get_model_by_name(model_name, rgb, device=device, dataset=None)
+            model = get_model_by_name(
+                model_name, rgb, device=device, dataset=None, seed=args.seed
+            )
 
         if model_name == "imagestats":
             transforms = [nn.Identity()]
@@ -166,10 +171,10 @@ def main(args):
 
         knn_model.fit(X=x_train, y=y_train)
         y_pred = knn_model.predict(x_test)
-        y_score = knn_model.predict_proba(x_test)
+        score = knn_model.predict_proba(x_test)
 
         if not args.faiss:
-            score = sparse_to_dense(y_score)
+            score = sparse_to_dense(score)
 
         metrics = {
             "map_weighted": average_precision_score(y_test, score, average="weighted"),

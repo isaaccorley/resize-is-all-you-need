@@ -75,10 +75,12 @@ def main(args):
 
         if "mosaiks_zca" in model_name:
             model = get_model_by_name(
-                model_name, rgb, device=device, dataset=dm.train_dataset
+                model_name, rgb, device=device, dataset=dm.train_dataset, seed=args.seed
             )
         else:
-            model = get_model_by_name(model_name, rgb, device=device, dataset=None)
+            model = get_model_by_name(
+                model_name, rgb, device=device, dataset=None, seed=args.seed
+            )
 
         if model_name == "imagestats":
             transforms = [nn.Identity()]
