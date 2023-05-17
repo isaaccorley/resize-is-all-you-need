@@ -8,7 +8,7 @@ from tqdm import tqdm
 ROOT = os.path.join("data", "so2sat")
 
 if __name__ == "__main__":
-    versions = "random", "block", "culture_10"
+    versions = ["random", "culture_10"]
     stats = {version: {} for version in versions}
     for version in tqdm(versions):
         path = os.path.join(ROOT, version, "training.h5")

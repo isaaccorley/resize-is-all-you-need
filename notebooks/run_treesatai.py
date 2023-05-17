@@ -1,14 +1,15 @@
 import argparse
+import gc
 import json
 import multiprocessing as mp
 import os
-import pickle
 import sys
 from itertools import product
 from pprint import pprint
 
 import kornia.augmentation as K
 import lightning
+import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
@@ -25,7 +26,7 @@ from sklearn.preprocessing import StandardScaler
 sys.path.append("..")
 from src.datasets import TreeSatAI, TreeSatAIDataModule
 from src.models import get_model_by_name
-from src.transforms import seco_rgb_transforms, sentinel2_transforms, ssl4eo_transforms
+from src.transforms import sentinel2_transforms, ssl4eo_transforms
 from src.utils import extract_features, sparse_to_dense
 
 
@@ -35,14 +36,17 @@ def main(args):
     os.makedirs(args.directory, exist_ok=True)
 
     # Fit
-    model_names = [
-        "resnet50_pretrained_moco",
-        "imagestats",
-        "resnet50_pretrained_imagenet",
-        "resnet50_randominit",
-        "mosaiks_512_3",
-        "mosaiks_zca_512_3",
-    ]
+    if args.seed == 0:
+        model_names = [
+            "resnet50_pretrained_moco",
+            "imagestats",
+            "resnet50_pretrained_imagenet",
+            "resnet50_randominit",
+            "mosaiks_512_3",
+            "mosaiks_zca_512_3",
+        ]
+    else:
+        model_names = ["resnet50_randominit", "mosaiks_512_3", "mosaiks_zca_512_3"]
     rgbs = [False, True]
     sizes = [34, 224]
 
@@ -51,12 +55,9 @@ def main(args):
         print(f"Extracting features for {run}")
 
         # Skip if features were already extracted
-        if os.path.exists(os.path.join(args.directory, f"{run}.pkl")):
+        if os.path.exists(os.path.join(args.directory, f"{run}.npz")):
             continue
 
-        # SeCo only supports RGB
-        if model_name == "resnet50_pretrained_seco" and not rgb:
-            continue
         if model_name == "imagestats" and size == 224:
             continue
 
@@ -82,17 +83,22 @@ def main(args):
 
         if "mosaiks_zca" in model_name:
             model = get_model_by_name(
-                model_name, rgb, device=device, dataset=dm.train_dataset
+                model_name, rgb, device=device, dataset=dm.train_dataset, seed=args.seed
             )
         else:
-            model = get_model_by_name(model_name, rgb, device=device, dataset=None)
+            model = get_model_by_name(
+                model_name, rgb, device=device, dataset=None, seed=args.seed
+            )
 
         if model_name == "imagestats":
             transforms = [nn.Identity()]
-        elif "seco" in model_name:
-            transforms = [K.Resize(size), *seco_rgb_transforms()]
         elif "moco" in model_name:
             transforms = [K.Resize(size), *ssl4eo_transforms()]
+        elif "imagenet" in model_name:
+            if rgb:
+                transforms = [K.Resize(size), *sentinel2_transforms(), dm.norm_rgb]
+            else:
+                transforms = [K.Resize(size), *sentinel2_transforms(), dm.norm_msi]
         else:
             transforms = [K.Resize(size), *sentinel2_transforms()]
 
@@ -104,9 +110,14 @@ def main(args):
         x_test, y_test = extract_features(
             model, dm.test_dataloader(), device, transforms=transforms
         )
-        data = dict(x_train=x_train, y_train=y_train, x_test=x_test, y_test=y_test)
-        with open(os.path.join(args.directory, f"{run}.pkl"), "wb") as f:
-            pickle.dump(data, f)
+
+        filename = os.path.join(args.directory, f"{run}.npz")
+        np.savez(
+            filename, x_train=x_train, y_train=y_train, x_test=x_test, y_test=y_test
+        )
+        del model, dm, transforms
+        torch.cuda.empty_cache()
+        gc.collect()
 
     # Eval
     output = os.path.join(args.directory, "treesatai-results.json")
@@ -118,9 +129,6 @@ def main(args):
         with open(output) as f:
             results = json.load(f)
 
-        # SeCo only supports RGB
-        if model_name == "resnet50_pretrained_seco" and not rgb:
-            continue
         if model_name == "imagestats" and size == 224:
             continue
 
@@ -130,30 +138,43 @@ def main(args):
         if run in results:
             continue
 
-        filename = os.path.join(args.directory, f"{run}.pkl")
+        filename = os.path.join(args.directory, f"{run}.npz")
         if not os.path.exists(filename):
             continue
 
-        with open(filename, "rb") as f:
-            data = pickle.load(f)
-
+        data = np.load(filename)
         x_train = data["x_train"]
-        y_train = data["y_train"] > 0.0
+        y_train = (data["y_train"] > 0.0).astype(int)
         x_test = data["x_test"]
-        y_test = data["y_test"] > 0.0
+        y_test = (data["y_test"] > 0.0).astype(int)
 
-        if model_name == "imagestats" or model_name.startswith("mosaiks"):
+        if (
+            model_name == "imagestats"
+            or "random" in model_name
+            or model_name.startswith("mosaiks")
+        ):
             scaler = StandardScaler()
             scaler.fit(x_train)
             x_train = scaler.transform(x_train)
             x_test = scaler.transform(x_test)
 
-        knn_model = KNeighborsClassifier(n_neighbors=args.k, n_jobs=args.workers)
-        knn_model.fit(X=x_train, y=y_train)
+        if args.faiss:
+            from src.knn import FaissKNNMultilabelClassifier
 
+            knn_model = FaissKNNMultilabelClassifier(
+                n_neighbors=args.k, device=args.device
+            )
+        else:
+            knn_model = KNeighborsClassifier(
+                n_neighbors=args.k, algorithm="brute", n_jobs=args.workers
+            )
+
+        knn_model.fit(X=x_train, y=y_train)
         y_pred = knn_model.predict(x_test)
-        y_score = knn_model.predict_proba(x_test)
-        score = sparse_to_dense(y_score)
+        score = knn_model.predict_proba(x_test)
+
+        if not args.faiss:
+            score = sparse_to_dense(score)
 
         metrics = {
             "map_weighted": average_precision_score(y_test, score, average="weighted"),
@@ -175,6 +196,8 @@ def main(args):
 
         with open(output, "w") as f:
             json.dump(results, f, indent=2)
+
+        del knn_model
 
     # Convert to csv
     with open(output, "r") as f:
@@ -199,5 +222,7 @@ if __name__ == "__main__":
     parser.add_argument("--workers", type=int, default=mp.cpu_count())
     parser.add_argument("--device", type=str, default="cuda")
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--faiss", action="store_true")
     args = parser.parse_args()
+    args.directory = f"{args.directory}_{args.seed}"
     main(args)

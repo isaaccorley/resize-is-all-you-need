@@ -125,7 +125,7 @@ class MOSAIKS(RCF):
         self.weights = torch.tensor(patches)
 
 
-def get_model_by_name(model_name, rgb=True, device="cuda", dataset=None):
+def get_model_by_name(model_name, rgb=True, device="cuda", dataset=None, seed=None):
     if model_name == "resnet50_pretrained_seco":
         if not rgb:
             raise ValueError("SeCo weights only support RGB")
@@ -164,15 +164,17 @@ def get_model_by_name(model_name, rgb=True, device="cuda", dataset=None):
         model = ImageStatisticsModel()
     elif model_name == "mosaiks_512_3":
         if rgb:
-            model = RCF(in_channels=3, features=512, kernel_size=3, seed=0)
+            model = RCF(in_channels=3, features=512, kernel_size=3, seed=seed)
         else:
-            model = RCF(in_channels=13, features=512, kernel_size=3, seed=0)
+            model = RCF(in_channels=13, features=512, kernel_size=3, seed=seed)
     elif model_name == "mosaiks_zca_512_3":
         if rgb:
-            model = MOSAIKS(dataset, in_channels=3, features=512, kernel_size=3, seed=0)
+            model = MOSAIKS(
+                dataset, in_channels=3, features=512, kernel_size=3, seed=seed
+            )
         else:
             model = MOSAIKS(
-                dataset, in_channels=13, features=512, kernel_size=3, seed=0
+                dataset, in_channels=13, features=512, kernel_size=3, seed=seed
             )
     else:
         raise ValueError(f"{model_name} is invalid")
