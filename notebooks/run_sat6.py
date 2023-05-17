@@ -1,4 +1,5 @@
 import argparse
+import gc
 import json
 import multiprocessing as mp
 import os
@@ -29,14 +30,17 @@ def main(args):
     os.makedirs(args.directory, exist_ok=True)
 
     # Fit
-    model_names = [
-        "resnet50_pretrained_moco",
-        "imagestats",
-        "resnet50_pretrained_imagenet",
-        "resnet50_randominit",
-        "mosaiks_512_3",
-        "mosaiks_zca_512_3",
-    ]
+    if args.seed == 0:
+        model_names = [
+            "resnet50_pretrained_moco",
+            "imagestats",
+            "resnet50_pretrained_imagenet",
+            "resnet50_randominit",
+            "mosaiks_512_3",
+            "mosaiks_zca_512_3",
+        ]
+    else:
+        model_names = ["resnet50_randominit", "mosaiks_512_3", "mosaiks_zca_512_3"]
     rgbs = [True]
     sizes = [34, 224]
 
@@ -88,6 +92,9 @@ def main(args):
         np.savez(
             filename, x_train=x_train, y_train=y_train, x_test=x_test, y_test=y_test
         )
+        del model, dm, transforms
+        torch.cuda.empty_cache()
+        gc.collect()
 
     # Eval
     output = os.path.join(args.directory, "sat6-results.json")
@@ -124,9 +131,16 @@ def main(args):
             x_train = scaler.transform(x_train)
             x_test = scaler.transform(x_test)
 
-        knn_model = KNeighborsClassifier(n_neighbors=args.k, n_jobs=args.workers)
-        knn_model.fit(X=x_train, y=y_train)
+        if args.faiss:
+            from src.knn import FaissKNNClassifier
 
+            knn_model = FaissKNNClassifier(n_neighbors=args.k, device=args.device)
+        else:
+            knn_model = KNeighborsClassifier(
+                n_neighbors=args.k, algorithm="brute", n_jobs=args.workers
+            )
+
+        knn_model.fit(X=x_train, y=y_train)
         y_pred = knn_model.predict(x_test)
 
         metrics = {
@@ -146,6 +160,8 @@ def main(args):
 
         with open(output, "w") as f:
             json.dump(results, f, indent=2)
+
+        del knn_model
 
     # Convert to csv
     with open(output) as f:
@@ -170,6 +186,7 @@ if __name__ == "__main__":
     parser.add_argument("--workers", type=int, default=mp.cpu_count())
     parser.add_argument("--device", type=str, default="cuda")
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--faiss", action="store_true")
     args = parser.parse_args()
     args.directory = f"{args.directory}_{args.seed}"
     main(args)
