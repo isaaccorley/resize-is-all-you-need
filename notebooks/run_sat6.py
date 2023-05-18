@@ -92,7 +92,11 @@ def main(args):
 
         filename = os.path.join(args.directory, f"{run}.npz")
         np.savez(
-            filename, x_train=x_train, y_train=y_train, x_test=x_test, y_test=y_test
+            filename,
+            x_train=x_train,
+            y_train=y_train.astype(np.int16),
+            x_test=x_test,
+            y_test=y_test.astype(np.int16),
         )
         del model, dm, transforms
         torch.cuda.empty_cache()

@@ -112,6 +112,8 @@ def main(args):
         )
 
         filename = os.path.join(args.directory, f"{run}.npz")
+        y_train = (y_train > 0.0).astype(np.int16)
+        y_test = (y_test > 0.0).astype(np.int16)
         np.savez(
             filename, x_train=x_train, y_train=y_train, x_test=x_test, y_test=y_test
         )
@@ -144,9 +146,9 @@ def main(args):
 
         data = np.load(filename)
         x_train = data["x_train"]
-        y_train = (data["y_train"] > 0.0).astype(int)
+        y_train = data["y_train"]
         x_test = data["x_test"]
-        y_test = (data["y_test"] > 0.0).astype(int)
+        y_test = data["y_test"]
 
         if (
             model_name == "imagestats"
@@ -166,7 +168,7 @@ def main(args):
             )
         else:
             knn_model = KNeighborsClassifier(
-                n_neighbors=args.k, algorithm="brute", n_jobs=args.workers
+                n_neighbors=args.k, algorithm="auto", n_jobs=args.workers
             )
 
         knn_model.fit(X=x_train, y=y_train)
