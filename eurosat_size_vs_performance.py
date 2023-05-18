@@ -1,7 +1,7 @@
 import os
 
+import pandas as pd
 import kornia.augmentation as K
-import numpy as np
 import torch
 import torch.nn as nn
 from sklearn.neighbors import KNeighborsClassifier
@@ -17,17 +17,20 @@ def main():
     os.makedirs("results/", exist_ok=True)
     device = torch.device("cuda:0")
     model_names = [
+        "resnet50_pretrained_seco",
         "resnet50_pretrained_moco",
         "resnet50_pretrained_imagenet",
         "resnet50_randominit",
-        "resnet18_pretrained_moco",
     ]
-    for preprocess_method in ["divide", "standardization", "minmax"]:
+    rows = []
+    for preprocess_method in ["divide", "standardization", "minmax", "for_seco"]:
         for rgb in [True, False]:
             for model_name in model_names:
-                model = get_model_by_name(model_name, rgb=rgb, device="cuda:0")
 
-                results = []
+                if "seco" in model_name and not rgb:
+                    continue
+
+                model = get_model_by_name(model_name, rgb=rgb, device="cuda:0")
                 sizes = list(range(32, 256 + 1, 16))
                 for size in tqdm(sizes):
                     transforms = nn.Sequential(K.Resize(size)).to(device)
@@ -60,11 +63,25 @@ def main():
                     knn_model.fit(x_train, y_train)
                     acc = knn_model.score(x_test, y_test)
 
-                    results.append(acc)
-                results = np.array(results)
+                    scaler = StandardScaler()
+                    x_train = scaler.fit_transform(x_train)
+                    x_test = scaler.transform(x_test)
 
-                np.save("results/eurosat_size_vs_performance_sizes.npy", sizes)
-                np.save(f"results/eurosat_size_vs_performance-{model_name}-{rgb}-{preprocess_method}.npy", results)
+                    knn_model = KNeighborsClassifier(n_neighbors=5)
+                    knn_model.fit(x_train, y_train)
+                    acc_scaled = knn_model.score(x_test, y_test)
+
+                    rows.append({
+                        "model": model_name,
+                        "preprocess_method": preprocess_method,
+                        "rgb": rgb,
+                        "size": size,
+                        "acc": acc,
+                        "acc_scaled": acc_scaled,
+                    })
+
+    df = pd.DataFrame(rows)
+    df.to_csv("results/eurosat_size_vs_performance.csv", index=False)
 
 
 if __name__ == "__main__":

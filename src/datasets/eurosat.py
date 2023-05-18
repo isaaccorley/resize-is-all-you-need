@@ -1,6 +1,6 @@
 import torch
 from lightning.pytorch import LightningDataModule
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader
 from torchgeo.datasets import EuroSAT
 from torchvision.transforms import Normalize
 
@@ -99,11 +99,8 @@ class EuroSATMinimal(LightningDataModule):
             return sample
 
         def preprocess_seco(sample):
-            if rgb:
-                sample["image"] = (sample["image"].float() / 2750.0)
-                sample["image"] = torch.clamp(sample["image"], 0, 1)
-            else:
-                raise ValueError("Method not supported")
+            sample["image"] = (sample["image"].float() / 2750.0)
+            sample["image"] = torch.clamp(sample["image"], 0, 1)
             return sample
 
         if method == "divide":
