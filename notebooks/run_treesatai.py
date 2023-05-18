@@ -168,7 +168,7 @@ def main(args):
             )
         else:
             knn_model = KNeighborsClassifier(
-                n_neighbors=args.k, algorithm="auto", n_jobs=args.workers
+                n_neighbors=args.k, algorithm="brute", n_jobs=args.workers
             )
 
         knn_model.fit(X=x_train, y=y_train)
