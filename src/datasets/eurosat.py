@@ -1,8 +1,9 @@
 import torch
 from lightning.pytorch import LightningDataModule
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Subset
 from torchgeo.datasets import EuroSAT
 from torchvision.transforms import Normalize
+import numpy as np
 
 MAX = (
     torch.tensor(
@@ -123,6 +124,7 @@ class EuroSATMinimal(LightningDataModule):
         normalization_method="divide",
         batch_size=32,
         num_workers=8,
+        train_pct=1.0,
         use_both_trainval=False,
     ):
         """DataModule for small EuroSAT experiments.
@@ -137,7 +139,9 @@ class EuroSATMinimal(LightningDataModule):
         self.normalization_method = normalization_method
         self.batch_size = batch_size
         self.num_workers = num_workers
+        self.train_pct = train_pct
         self.use_both_trainval = use_both_trainval
+        assert 0 < self.train_pct <= 1.0
 
     def setup(self):
         preprocess = self.get_preprocess(
@@ -149,6 +153,12 @@ class EuroSATMinimal(LightningDataModule):
             bands=EuroSAT.BAND_SETS[self.band_set],
             transforms=preprocess,
         )
+
+        if self.train_pct < 1:
+            num_samples = int(len(ds_train) * self.train_pct)
+            idxs = np.random.choice(len(ds_train), num_samples, replace=False)
+            ds_train = Subset(ds_train, idxs)
+
         ds_val = EuroSAT(
             root=self.root,
             split="val",
