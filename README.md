@@ -1,5 +1,5 @@
 This is the repository for the paper, ["Revisiting pre-trained remote sensing model
-benchmarks: resizing and normalization matters"]()
+benchmarks: resizing and normalization matters"](https://arxiv.org/abs/2305.13456)
 
 ### TL;DR
 
