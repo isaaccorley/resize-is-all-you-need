@@ -3,9 +3,9 @@
 This is the official repository for the paper, ["Revisiting pre-trained remote sensing model
 benchmarks: resizing and normalization matters"](https://arxiv.org/abs/2305.13456)
 
-### Update: The paper has been accepted to the [2024 CVPR PBVS Workshop](https://pbvs-workshop.github.io/)!
+**Update: The paper has been accepted to the [2024 CVPR PBVS Workshop](https://pbvs-workshop.github.io/)!**
 
-**In this paper, we find that by simply resizing and normalizing remote sensing imagery correctly provides a significant boost, particlarly when transferring ImageNet pretrained models to the remote sensing domain**
+#### In this paper, we find that by simply resizing and normalizing remote sensing imagery correctly provides a significant boost, particlarly when transferring ImageNet pretrained models to the remote sensing domain
 
 Remote sensing benchmark datasets, e.g. EuroSAT -- 64 x 64, commonly have small image sizes due to patches being extracted from large satellite tiles. However, we find that recently, evaluation is being performed at these small image sizes while being trained at larger image sizes.
 
@@ -16,7 +16,7 @@ Remote sensing benchmark datasets, e.g. EuroSAT -- 64 x 64, commonly have small 
 </p>
 
 <p align="center">
-    <img src="./figures/eurosat_size_vs_performance.png" width="800"/><br/>
+    <img src="./figures/eurosat_size_vs_performance.png" width="6600"/><br/>
     <b>The effect of input image size on EuroSAT downstream performance (overall accuracy) across different ResNet models.</b> By default, EuroSAT images are 64 × 64 pixels, however resizing to larger image sizes before embedding increases downstream accuracy under a KNN (k = 5)
 classification model in all cases.
 </p>
