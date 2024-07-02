@@ -16,7 +16,7 @@ Remote sensing benchmark datasets, e.g. EuroSAT -- 64 x 64, commonly have small 
 </p>
 
 <p align="center">
-    <img src="./figures/eurosat_size_vs_performance.png" width="6600"/><br/>
+    <img src="./figures/eurosat_size_vs_performance.png" width="600"/><br/>
     <b>The effect of input image size on EuroSAT downstream performance (overall accuracy) across different ResNet models.</b> By default, EuroSAT images are 64 × 64 pixels, however resizing to larger image sizes before embedding increases downstream accuracy under a KNN (k = 5)
 classification model in all cases.
 </p>
