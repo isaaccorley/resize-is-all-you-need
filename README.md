@@ -7,8 +7,9 @@ benchmarks: resizing and normalization matters"](https://arxiv.org/abs/2305.1345
 
 #### In this paper, we find that by simply resizing and normalizing remote sensing imagery correctly provides a significant boost, particlarly when transferring ImageNet pretrained models to the remote sensing domain
 
-Remote sensing benchmark datasets, e.g. EuroSAT -- 64 x 64, commonly have small image sizes due to patches being extracted from large satellite tiles. However, we find that recently, evaluation is being performed at these small image sizes while being trained at larger image sizes.
+### Resizing
 
+Remote sensing benchmark datasets, e.g. EuroSAT -- 64 x 64, commonly have small image sizes due to patches being extracted from large satellite tiles. However, we find that recently, evaluation is being performed at these small image sizes while being trained at larger image sizes.
 
 <p align="center">
     <img src="./figures/delta_plot.png" width="600"/><br/>
@@ -21,6 +22,8 @@ Remote sensing benchmark datasets, e.g. EuroSAT -- 64 x 64, commonly have small 
 classification model in all cases.
 </p>
 
+
+### Normalization
 
 Furthermore, we find that many pretrained geospatial foundation models are sensitive to the standard normalization used during inference. Blindly using ImageNet statistics can significantly degrade downgrade representation ability
 
