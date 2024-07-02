@@ -12,12 +12,12 @@ Remote sensing benchmark datasets, e.g. EuroSAT -- 64 x 64, commonly have small 
 
 <p align="center">
     <img src="./figures/delta_plot.png" width="600"/><br/>
-    <b>Difference in downstream task metrics</b>, Overall Accuracy (OA) (multiclass) or mean Average Precision (mAP) (multilabel), after resizing images to 224 × 224 from the original, smaller, image sizes. ImageNet pretrained models often are trained with 224 x 224 inputs and therefore do not produce useful embeddings with smaller image patches.
+    <b>Figure 1. Difference in downstream task metrics</b>, Overall Accuracy (OA) (multiclass) or mean Average Precision (mAP) (multilabel), after resizing images to 224 × 224 from the original, smaller, image sizes. ImageNet pretrained models often are trained with 224 x 224 inputs and therefore do not produce useful embeddings with smaller image patches.
 </p>
 
 <p align="center">
     <img src="./figures/eurosat_size_vs_performance.png" width="600"/><br/>
-    <b>The effect of input image size on EuroSAT downstream performance (overall accuracy) across different ResNet models.</b> By default, EuroSAT images are 64 × 64 pixels, however resizing to larger image sizes before embedding increases downstream accuracy under a KNN (k = 5)
+    <b>Figure 2. The effect of input image size on EuroSAT downstream performance (overall accuracy) across different ResNet models.</b> By default, EuroSAT images are 64 × 64 pixels, however resizing to larger image sizes before embedding increases downstream accuracy under a KNN (k = 5)
 classification model in all cases.
 </p>
 
@@ -31,7 +31,7 @@ Furthermore, we find that many pretrained geospatial foundation models are sensi
   <img src="figures/tsne_eurosat_nostdscaling_imagenet_224.png" width="250" /> 
   <img src="figures/tsne_eurosat_imagenet_224.png" width="250" />
 
-<b>t-SNE plots of EuroSAT test set embeddings extracted using a ResNet50 pretrained on ImageNet with different preprocessing.</b> (left to right: 32 × 32 with normalization, 224 × 224 without normalization, 224 × 224 with normalization)
+<b>Figure 3. t-SNE plots of EuroSAT test set embeddings extracted using a ResNet50 pretrained on ImageNet with different preprocessing.</b> (left to right: 32 × 32 with normalization, 224 × 224 without normalization, 224 × 224 with normalization)
 </p>
 
 
