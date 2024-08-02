@@ -1,20 +1,27 @@
-### Resize is All You Need for Remote Sensing
+<div align="center">
+<h2>Revisiting pre-trained remote sensing model benchmarks: resizing and normalization matters</h2>
+
+[**Isaac Corley**](https://isaacc.dev/)<sup>1</sup> · [**Caleb Robinson**](https://www.microsoft.com/en-us/research/people/davrob/)<sup>2</sup> · [**Rahul Dodhia**](https://www.microsoft.com/en-us/research/people/radodhia/)<sup>2</sup> · [**Juan M. Lavista Ferres**](https://www.microsoft.com/en-us/research/people/jlavista/)<sup>2</sup> · [**Peyman Najafirad (Paul Rad)**](https://scholar.google.com/citations?user=uoCn8c8AAAAJ&hl=en)<sup>1</sup>
+
+<sup>1</sup>University of Texas at San Antonio&emsp;&emsp;&emsp;&emsp;<sup>2</sup>Microsoft AI for Good Research Lab
+
+<a href="[https://arxiv.org/abs/2401.06762](https://arxiv.org/abs/2305.13456)"><img src='https://img.shields.io/badge/arXiv-Revisiting%20pretrained%20remote%20sensing%20model%20benchmarks-red' alt='Paper PDF'></a>
+</div>
+
+<p align="center">
+    <img src="./figures/delta_plot.png" width="600"/><br/>
+    <b>Figure 1. Difference in downstream task metrics, Overall Accuracy (OA) (multiclass) or mean Average Precision (mAP) (multilabel), after resizing images to 224 × 224 from the original, smaller, image sizes. ImageNet pretrained models often are trained with 224 x 224 inputs and therefore do not produce useful embeddings with smaller image patches.
+</p>
+
 
 This is the official repository for the paper, ["Revisiting pre-trained remote sensing model
-benchmarks: resizing and normalization matters"](https://arxiv.org/abs/2305.13456)
-
-**Update: The paper has been accepted to the [2024 CVPR PBVS Workshop](https://pbvs-workshop.github.io/)!**
+benchmarks: resizing and normalization matters"](https://arxiv.org/abs/2305.13456) presented at the [2024 CVPR PBVS Workshop](https://pbvs-workshop.github.io/).
 
 #### In this paper, we find that by simply resizing and normalizing remote sensing imagery correctly provides a significant boost, particlarly when transferring ImageNet pretrained models to the remote sensing domain
 
 ### Resizing
 
 Remote sensing benchmark datasets, e.g. EuroSAT -- 64 x 64, commonly have small image sizes due to patches being extracted from large satellite tiles. However, we find that recently, evaluation is being performed at these small image sizes while being trained at larger image sizes.
-
-<p align="center">
-    <img src="./figures/delta_plot.png" width="600"/><br/>
-    <b>Figure 1. Difference in downstream task metrics</b>, Overall Accuracy (OA) (multiclass) or mean Average Precision (mAP) (multilabel), after resizing images to 224 × 224 from the original, smaller, image sizes. ImageNet pretrained models often are trained with 224 x 224 inputs and therefore do not produce useful embeddings with smaller image patches.
-</p>
 
 <p align="center">
     <img src="./figures/eurosat_size_vs_performance.png" width="600"/><br/>
