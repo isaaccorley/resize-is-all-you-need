@@ -17,7 +17,7 @@
 This is the official repository for the paper, ["Revisiting pre-trained remote sensing model
 benchmarks: resizing and normalization matters"](https://arxiv.org/abs/2305.13456) presented at the [2024 CVPR PBVS Workshop](https://pbvs-workshop.github.io/).
 
-#### In this paper, we find that by simply resizing and normalizing remote sensing imagery correctly provides a significant boost, particlarly when transferring ImageNet pretrained models to the remote sensing domain
+#### In this paper, we find that simply resizing and normalizing remote sensing imagery correctly provides a significant boost, particlarly when transferring ImageNet pretrained models to the remote sensing domain
 
 ### Resizing
 
@@ -32,7 +32,7 @@ classification model in all cases.
 
 ### Normalization
 
-Furthermore, we find that many pretrained geospatial foundation models are sensitive to the standard normalization used during inference. Blindly using ImageNet statistics can significantly degrade downgrade representation ability
+Furthermore, we find that many pretrained geospatial foundation models are sensitive to the standard normalization used during inference. Blindly using ImageNet statistics can significantly degrade representation ability
 
 
 
