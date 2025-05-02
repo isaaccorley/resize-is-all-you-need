@@ -10,7 +10,7 @@
 
 <p align="center">
     <img src="./figures/delta_plot.png" width="600"/><br/>
-    <b>Figure 1. Difference in downstream task metrics, Overall Accuracy (OA) (multiclass) or mean Average Precision (mAP) (multilabel), after resizing images to 224 × 224 from the original, smaller, image sizes. ImageNet pretrained models often are trained with 224 x 224 inputs and therefore do not produce useful embeddings with smaller image patches.
+    <b>Figure 1. Difference in downstream task metrics, Overall Accuracy (OA) (multiclass) or mean Average Precision (mAP) (multilabel), after resizing images to 224 × 224 from the original, smaller, image sizes. ImageNet pretrained models often are trained with 224 x 224 inputs and therefore do not produce useful embeddings with smaller image patches.</b>
 </p>
 
 
